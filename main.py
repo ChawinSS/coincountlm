@@ -1,9 +1,9 @@
-# main.py
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
+import os  # <-- ✅ Required to read environment variables
 
 app = FastAPI()
 
@@ -18,14 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Roboflow credentials
-ROBOFLOW_API_KEY = "xkEpBGhVZaDUygc57H7b"
+# ✅ Load the API key securely from environment variable
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
 MODEL_ENDPOINT = "https://detect.roboflow.com/my-first-project-lodrg/2"
 
 @app.post("/predict")
 async def predict(image: UploadFile = File(...)):
     try:
-        # Prepare file for Roboflow
         files = {"file": (image.filename, await image.read(), image.content_type)}
         response = requests.post(
             f"{MODEL_ENDPOINT}?api_key={ROBOFLOW_API_KEY}",
