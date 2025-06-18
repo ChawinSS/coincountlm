@@ -3,22 +3,19 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
-import os  # <-- ✅ Required to read environment variables
+import os
 
 app = FastAPI()
-
-# Serve static frontend from the "static" folder
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 # Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Optional: tighten this for production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Load the API key securely from environment variable
+# Load API key
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
 MODEL_ENDPOINT = "https://detect.roboflow.com/my-first-project-lodrg/2"
 
@@ -30,7 +27,6 @@ async def predict(image: UploadFile = File(...)):
             f"{MODEL_ENDPOINT}?api_key={ROBOFLOW_API_KEY}",
             files=files
         )
-
         print("Roboflow response:", response.status_code, response.text)
 
         if response.status_code != 200:
@@ -44,5 +40,7 @@ async def predict(image: UploadFile = File(...)):
         }
 
     except Exception as e:
-        print("Backend error:", str(e))
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Mount static *after* routes
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
